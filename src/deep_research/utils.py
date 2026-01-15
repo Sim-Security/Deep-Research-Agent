@@ -2,7 +2,7 @@
 
 import os
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any
 
 import httpx
 from langchain.chat_models import init_chat_model
@@ -10,7 +10,6 @@ from langchain_core.language_models import BaseChatModel
 from langchain_core.messages import AIMessage
 
 from deep_research.state import Citation
-
 
 # =============================================================================
 # DATE UTILITIES
@@ -32,7 +31,7 @@ def get_iso_date() -> str:
 # =============================================================================
 
 
-def get_api_key_for_model(model_name: str) -> Optional[str]:
+def get_api_key_for_model(model_name: str) -> str | None:
     """Get the appropriate API key for a model.
 
     Supports OpenRouter format (provider/model-name) and direct provider models.
@@ -123,11 +122,13 @@ async def duckduckgo_search(
         results = []
         with DDGS() as ddgs:
             for r in ddgs.text(query, max_results=max_results):
-                results.append({
-                    "title": r.get("title", ""),
-                    "url": r.get("href", ""),
-                    "snippet": r.get("body", ""),
-                })
+                results.append(
+                    {
+                        "title": r.get("title", ""),
+                        "url": r.get("href", ""),
+                        "snippet": r.get("body", ""),
+                    }
+                )
         return results
     except Exception as e:
         print(f"DuckDuckGo search error: {e}")
@@ -160,11 +161,13 @@ async def tavily_search(
 
         results = []
         for r in response.get("results", []):
-            results.append({
-                "title": r.get("title", ""),
-                "url": r.get("url", ""),
-                "snippet": r.get("content", ""),
-            })
+            results.append(
+                {
+                    "title": r.get("title", ""),
+                    "url": r.get("url", ""),
+                    "snippet": r.get("content", ""),
+                }
+            )
         return results
     except Exception as e:
         print(f"Tavily search error: {e}, falling back to DuckDuckGo")

@@ -1,10 +1,13 @@
 # Deep Research Agent - Production Dockerfile
-# Multi-stage build for optimized image size
+# Multi-stage build optimized for GCP Cloud Run
+#
+# Build: docker build -t deep-research-agent .
+# Run:   docker run -p 8080:8080 --env-file .env deep-research-agent
 
 # ============================================================================
 # Stage 1: Builder - Install dependencies
 # ============================================================================
-FROM python:3.11-slim as builder
+FROM python:3.11-slim AS builder
 
 WORKDIR /app
 
@@ -15,22 +18,22 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # Install uv for fast dependency management
-RUN pip install uv
+RUN pip install --no-cache-dir uv
 
 # Copy project files needed for installation
 COPY pyproject.toml ./
 COPY src/ ./src/
 COPY README.md ./
 
-# Create virtual environment and install dependencies
+# Create virtual environment and install dependencies (production only)
 RUN uv venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
-RUN uv pip install ".[dev]"
+RUN uv pip install --no-cache .
 
 # ============================================================================
-# Stage 2: Runtime - Minimal production image
+# Stage 2: Runtime - Minimal production image for Cloud Run
 # ============================================================================
-FROM python:3.11-slim as runtime
+FROM python:3.11-slim AS runtime
 
 WORKDIR /app
 
@@ -49,17 +52,20 @@ COPY src/ ./src/
 COPY app.py ./
 COPY langgraph.json ./
 
-# Create non-root user for security
+# Create non-root user for security (Cloud Run best practice)
 RUN useradd --create-home --shell /bin/bash appuser \
     && chown -R appuser:appuser /app
 USER appuser
 
-# Expose Streamlit port
-EXPOSE 8501
+# Cloud Run requires port 8080
+ENV PORT=8080
+EXPOSE 8080
 
 # Health check for container orchestration
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:8501/_stcore/health || exit 1
+# Cloud Run uses HTTP health checks on $PORT
+HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
+    CMD curl -f http://localhost:${PORT}/_stcore/health || exit 1
 
-# Default command: Run Streamlit app
-CMD ["streamlit", "run", "app.py", "--server.port=8501", "--server.address=0.0.0.0", "--server.headless=true"]
+# Default command: Run Streamlit app on Cloud Run port
+# --server.enableCORS=false and --server.enableXsrfProtection=false for Cloud Run proxy
+CMD ["sh", "-c", "streamlit run app.py --server.port=${PORT} --server.address=0.0.0.0 --server.headless=true --server.enableCORS=false --server.enableXsrfProtection=false"]

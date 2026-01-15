@@ -22,7 +22,7 @@ from langchain_core.runnables import RunnableConfig
 from langgraph.graph import END, START, StateGraph
 from langgraph.types import Command, interrupt
 
-from deep_research.configuration import Configuration, SearchAPI
+from deep_research.configuration import Configuration
 from deep_research.prompts import (
     CLARIFY_WITH_USER_PROMPT,
     COMPRESS_RESEARCH_PROMPT,
@@ -52,7 +52,6 @@ from deep_research.utils import (
     results_to_citations,
     search,
 )
-
 
 # =============================================================================
 # MAIN WORKFLOW NODES
@@ -98,16 +97,18 @@ async def clarify_with_user(
     # Ask the model if clarification is needed
     try:
         structured_model = model.with_structured_output(ClarifyWithUser)
-        response: ClarifyWithUser = await structured_model.ainvoke([
-            HumanMessage(content=prompt)
-        ])
+        response: ClarifyWithUser = await structured_model.ainvoke(
+            [HumanMessage(content=prompt)]
+        )
 
         if response.need_clarification:
             # Interrupt to get user clarification
-            user_response = interrupt({
-                "question": response.question,
-                "type": "clarification_needed",
-            })
+            user_response = interrupt(
+                {
+                    "question": response.question,
+                    "type": "clarification_needed",
+                }
+            )
 
             # Add user's clarification to messages
             return Command(
@@ -162,15 +163,13 @@ async def transform_to_brief(
 
     try:
         structured_model = model.with_structured_output(ResearchQuestion)
-        response: ResearchQuestion = await structured_model.ainvoke([
-            HumanMessage(content=prompt)
-        ])
+        response: ResearchQuestion = await structured_model.ainvoke(
+            [HumanMessage(content=prompt)]
+        )
 
         return {
             "research_brief": response.research_brief,
-            "supervisor_messages": [
-                HumanMessage(content=response.research_brief)
-            ],
+            "supervisor_messages": [HumanMessage(content=response.research_brief)],
         }
 
     except Exception as e:
@@ -233,10 +232,12 @@ async def supervisor(
 
     # Invoke model
     try:
-        response = await model_with_tools.ainvoke([
-            SystemMessage(content=prompt),
-            *supervisor_messages,
-        ])
+        response = await model_with_tools.ainvoke(
+            [
+                SystemMessage(content=prompt),
+                *supervisor_messages,
+            ]
+        )
 
         return Command(
             goto="supervisor_tools",
@@ -287,14 +288,13 @@ async def supervisor_tools(
 
     # Handle ConductResearch calls
     research_calls = [
-        tc for tc in most_recent.tool_calls
-        if tc["name"] == "ConductResearch"
+        tc for tc in most_recent.tool_calls if tc["name"] == "ConductResearch"
     ]
 
     if research_calls:
         # Limit concurrent research
-        allowed = research_calls[:configurable.max_concurrent_research_units]
-        overflow = research_calls[configurable.max_concurrent_research_units:]
+        allowed = research_calls[: configurable.max_concurrent_research_units]
+        overflow = research_calls[configurable.max_concurrent_research_units :]
 
         # Execute research in parallel
         tasks = [
@@ -315,10 +315,7 @@ async def supervisor_tools(
             results = await asyncio.gather(*tasks)
 
             for result, tc in zip(results, allowed):
-                compressed = result.get(
-                    "compressed_research",
-                    "Error: Research failed"
-                )
+                compressed = result.get("compressed_research", "Error: Research failed")
                 tool_messages.append(
                     ToolMessage(
                         content=compressed,
@@ -407,10 +404,12 @@ async def researcher(
     messages = state.get("researcher_messages", [])
 
     try:
-        response = await model.ainvoke([
-            SystemMessage(content=prompt),
-            *messages,
-        ])
+        response = await model.ainvoke(
+            [
+                SystemMessage(content=prompt),
+                *messages,
+            ]
+        )
 
         # Check if model wants to end research
         content = response.content.lower() if response.content else ""
@@ -603,7 +602,7 @@ async def final_report_generation(
                 current_retry += 1
                 # Truncate findings
                 limit = get_model_token_limit(configurable.final_report_model)
-                current_findings = current_findings[:limit * 2]
+                current_findings = current_findings[: limit * 2]
                 prompt = FINAL_REPORT_PROMPT.format(
                     research_brief=state.get("research_brief", ""),
                     messages=messages_str[:2000],

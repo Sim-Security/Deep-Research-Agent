@@ -1,13 +1,12 @@
 """Graph state definitions and data structures for the Deep Research agent."""
 
 import operator
-from typing import Annotated, Optional
+from typing import Annotated
 
 from langchain_core.messages import MessageLikeRepresentation
 from langgraph.graph import MessagesState
 from pydantic import BaseModel, Field
 from typing_extensions import TypedDict
-
 
 # =============================================================================
 # STRUCTURED OUTPUTS - Used for LLM tool calling
@@ -98,7 +97,7 @@ class AgentState(MessagesState):
 
     # Research context
     supervisor_messages: Annotated[list[MessageLikeRepresentation], override_reducer]
-    research_brief: Optional[str] = None
+    research_brief: str | None = None
 
     # Research outputs
     raw_notes: Annotated[list[str], override_reducer] = []
@@ -107,7 +106,7 @@ class AgentState(MessagesState):
 
     # Final output
     final_report: str = ""
-    quality_score: Optional[float] = None
+    quality_score: float | None = None
 
 
 class SupervisorState(TypedDict):

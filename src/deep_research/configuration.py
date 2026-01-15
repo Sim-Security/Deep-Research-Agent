@@ -2,7 +2,7 @@
 
 import os
 from enum import Enum
-from typing import Any, Optional
+from typing import Any
 
 from langchain_core.runnables import RunnableConfig
 from pydantic import BaseModel, Field
@@ -28,7 +28,7 @@ class Configuration(BaseModel):
     # =========================================================================
 
     summarization_model: str = Field(
-        default="google/gemini-2.0-flash-001",
+        default="x-ai/grok-4.1-fast",
         description="Model for summarizing search results",
     )
     summarization_model_max_tokens: int = Field(
@@ -37,7 +37,7 @@ class Configuration(BaseModel):
     )
 
     research_model: str = Field(
-        default="google/gemini-2.0-flash-001",
+        default="x-ai/grok-4.1-fast",
         description="Model for conducting research",
     )
     research_model_max_tokens: int = Field(
@@ -46,7 +46,7 @@ class Configuration(BaseModel):
     )
 
     compression_model: str = Field(
-        default="google/gemini-2.0-flash-001",
+        default="x-ai/grok-4.1-fast",
         description="Model for compressing research findings",
     )
     compression_model_max_tokens: int = Field(
@@ -55,7 +55,7 @@ class Configuration(BaseModel):
     )
 
     final_report_model: str = Field(
-        default="google/gemini-2.0-flash-001",
+        default="x-ai/grok-4.1-fast",
         description="Model for writing the final report",
     )
     final_report_model_max_tokens: int = Field(
@@ -127,7 +127,7 @@ class Configuration(BaseModel):
 
     @classmethod
     def from_runnable_config(
-        cls, config: Optional[RunnableConfig] = None
+        cls, config: RunnableConfig | None = None
     ) -> "Configuration":
         """Create Configuration from RunnableConfig or environment variables."""
         configurable = config.get("configurable", {}) if config else {}

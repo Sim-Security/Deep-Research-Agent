@@ -28,7 +28,7 @@ class Configuration(BaseModel):
     # =========================================================================
 
     summarization_model: str = Field(
-        default="google/gemini-2.0-flash-001",
+        default="x-ai/grok-4.1-fast",
         description="Model for summarizing search results",
     )
     summarization_model_max_tokens: int = Field(
@@ -37,7 +37,7 @@ class Configuration(BaseModel):
     )
 
     research_model: str = Field(
-        default="google/gemini-2.0-flash-001",
+        default="x-ai/grok-4.1-fast",
         description="Model for conducting research",
     )
     research_model_max_tokens: int = Field(
@@ -46,7 +46,7 @@ class Configuration(BaseModel):
     )
 
     compression_model: str = Field(
-        default="google/gemini-2.0-flash-001",
+        default="x-ai/grok-4.1-fast",
         description="Model for compressing research findings",
     )
     compression_model_max_tokens: int = Field(
@@ -55,7 +55,7 @@ class Configuration(BaseModel):
     )
 
     final_report_model: str = Field(
-        default="google/gemini-2.0-flash-001",
+        default="x-ai/grok-4.1-fast",
         description="Model for writing the final report",
     )
     final_report_model_max_tokens: int = Field(

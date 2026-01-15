@@ -137,10 +137,10 @@ def render_sidebar():
             model = st.selectbox(
                 "Research Model",
                 [
+                    "x-ai/grok-4.1-fast",
+                    "anthropic/claude-sonnet-4",
+                    "openai/gpt-4o",
                     "google/gemini-2.0-flash-001",
-                    "openai/gpt-4o-mini",
-                    "anthropic/claude-3-haiku-20240307",
-                    "meta-llama/llama-3.1-70b-instruct",
                 ],
                 index=0,
             )
@@ -214,7 +214,7 @@ async def run_research(topic: str):
         config = {
             "configurable": {
                 "research_model": st.session_state.config.get(
-                    "research_model", "google/gemini-2.0-flash-001"
+                    "research_model", "x-ai/grok-4.1-fast"
                 ),
                 "search_api": st.session_state.config.get("search_api", "duckduckgo"),
                 "max_researcher_iterations": st.session_state.config.get(
@@ -269,7 +269,7 @@ def main():
     # Header
     st.markdown('<h1 class="main-header">🔬 Deep Research Agent</h1>', unsafe_allow_html=True)
     st.markdown(
-        '<p class="sub-header">Powered by LangGraph • Gemini • LangSmith</p>',
+        '<p class="sub-header">Powered by LangGraph • Grok • LangSmith</p>',
         unsafe_allow_html=True
     )
     
@@ -334,7 +334,7 @@ def main():
     st.markdown(
         """
         <div style="text-align: center; color: #666; font-size: 0.85rem;">
-            Built with ❤️ using LangGraph, Streamlit, and Gemini
+            Built with ❤️ using LangGraph, Streamlit, and Grok
         </div>
         """,
         unsafe_allow_html=True

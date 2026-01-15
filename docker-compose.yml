@@ -1,0 +1,77 @@
+# Deep Research Agent - Docker Compose Configuration
+# Usage: docker compose up --build
+
+services:
+  # Main application service
+  deep-research-agent:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: deep-research-agent
+    ports:
+      - "8501:8501"
+    environment:
+      # LLM Provider (OpenRouter recommended)
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+
+      # Search APIs
+      - TAVILY_API_KEY=${TAVILY_API_KEY:-}
+      - DEFAULT_SEARCH_API=${DEFAULT_SEARCH_API:-duckduckgo}
+
+      # LangSmith Observability
+      - LANGCHAIN_API_KEY=${LANGCHAIN_API_KEY:-}
+      - LANGCHAIN_TRACING_V2=${LANGCHAIN_TRACING_V2:-true}
+      - LANGCHAIN_PROJECT=${LANGCHAIN_PROJECT:-deep-research-agent}
+
+      # Model Configuration
+      - SUMMARIZATION_MODEL=${SUMMARIZATION_MODEL:-google/gemini-2.0-flash-001}
+      - RESEARCH_MODEL=${RESEARCH_MODEL:-google/gemini-2.0-flash-001}
+      - COMPRESSION_MODEL=${COMPRESSION_MODEL:-google/gemini-2.0-flash-001}
+      - FINAL_REPORT_MODEL=${FINAL_REPORT_MODEL:-google/gemini-2.0-flash-001}
+
+      # Agent Configuration
+      - MAX_RESEARCHER_ITERATIONS=${MAX_RESEARCHER_ITERATIONS:-6}
+      - MAX_CONCURRENT_RESEARCH_UNITS=${MAX_CONCURRENT_RESEARCH_UNITS:-5}
+      - MAX_REACT_TOOL_CALLS=${MAX_REACT_TOOL_CALLS:-10}
+
+    # Resource limits for production
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+    # Restart policy
+    restart: unless-stopped
+
+    # Health check
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8501/_stcore/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Optional: Development service with hot reload
+  dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: deep-research-agent-dev
+    ports:
+      - "8502:8501"
+    volumes:
+      - ./src:/app/src:ro
+      - ./app.py:/app/app.py:ro
+    environment:
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+      - TAVILY_API_KEY=${TAVILY_API_KEY:-}
+      - DEFAULT_SEARCH_API=${DEFAULT_SEARCH_API:-duckduckgo}
+      - LANGCHAIN_API_KEY=${LANGCHAIN_API_KEY:-}
+      - LANGCHAIN_TRACING_V2=true
+      - LANGCHAIN_PROJECT=deep-research-agent-dev
+    profiles:
+      - dev

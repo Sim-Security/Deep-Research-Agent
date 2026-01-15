@@ -5,6 +5,9 @@ A powerful deep research agent built with **LangGraph** that conducts comprehens
 ![LangGraph](https://img.shields.io/badge/LangGraph-0.5.4-blue)
 ![Python](https://img.shields.io/badge/Python-3.10+-green)
 ![License](https://img.shields.io/badge/License-MIT-yellow)
+![Docker](https://img.shields.io/badge/Docker-Ready-2496ED)
+![CI](https://github.com/Sim-Security/Deep-Research-Agent/actions/workflows/ci.yml/badge.svg)
+![CD](https://github.com/Sim-Security/Deep-Research-Agent/actions/workflows/cd.yml/badge.svg)
 
 ## ✨ Features
 
@@ -14,6 +17,8 @@ A powerful deep research agent built with **LangGraph** that conducts comprehens
 - **🔍 Flexible Search** - DuckDuckGo (free) or Tavily (production)
 - **📊 LangSmith Integration** - Full observability and tracing
 - **🎨 Streamlit UI** - Interactive web interface for research
+- **🐳 Docker Ready** - Containerized deployment with multi-stage builds
+- **⚙️ CI/CD Pipeline** - Automated testing, linting, and Docker image publishing
 
 ## 🚀 Quick Start
 
@@ -64,6 +69,84 @@ langgraph dev
 
 Open [LangGraph Studio](https://smith.langchain.com/studio/?baseUrl=http://127.0.0.1:2024) in your browser.
 
+## 🐳 Docker Deployment
+
+### Quick Start with Docker
+
+```bash
+# Build and run
+docker compose up --build
+
+# Access at http://localhost:8501
+```
+
+### Pull Pre-built Image
+
+```bash
+# Pull from GitHub Container Registry
+docker pull ghcr.io/sim-security/deep-research-agent:latest
+
+# Run with environment variables
+docker run -p 8501:8501 \
+  -e OPENROUTER_API_KEY=your_key \
+  -e TAVILY_API_KEY=your_key \
+  ghcr.io/sim-security/deep-research-agent:latest
+```
+
+### Development Mode
+
+```bash
+# Run with hot reload (mounts source code)
+docker compose --profile dev up dev
+```
+
+### Docker Architecture
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                    Docker Container                      │
+├─────────────────────────────────────────────────────────┤
+│  Python 3.11-slim (minimal base image)                  │
+│  ├── /opt/venv (isolated dependencies)                  │
+│  ├── /app/src (application code)                        │
+│  └── Non-root user (security)                           │
+├─────────────────────────────────────────────────────────┤
+│  Exposed: 8501 (Streamlit)                              │
+│  Healthcheck: /_stcore/health                           │
+└─────────────────────────────────────────────────────────┘
+```
+
+## ⚙️ CI/CD Pipeline
+
+This project includes automated GitHub Actions workflows:
+
+### Continuous Integration (CI)
+
+Runs on every push and pull request:
+
+| Job | Description |
+|-----|-------------|
+| **Lint** | Ruff linter + formatter check |
+| **Type Check** | mypy static analysis |
+| **Test** | pytest with timeout |
+| **Docker Build** | Verify container builds |
+| **Security** | Trivy vulnerability scan |
+
+### Continuous Deployment (CD)
+
+Runs on merge to main and version tags:
+
+| Step | Description |
+|------|-------------|
+| **Build** | Multi-platform (amd64, arm64) |
+| **Push** | GitHub Container Registry |
+| **Attest** | Build provenance |
+
+### Status Badges
+
+- CI: ![CI](https://github.com/Sim-Security/Deep-Research-Agent/actions/workflows/ci.yml/badge.svg)
+- CD: ![CD](https://github.com/Sim-Security/Deep-Research-Agent/actions/workflows/cd.yml/badge.svg)
+
 ## 🏗️ Architecture
 
 ```
@@ -93,7 +176,12 @@ deep-research-agent/
 │   ├── prompts.py            # Prompt templates
 │   ├── utils.py              # Search & utilities
 │   └── deep_researcher.py    # Main LangGraph workflow
+├── .github/workflows/
+│   ├── ci.yml                # Continuous Integration
+│   └── cd.yml                # Continuous Deployment
 ├── app.py                    # Streamlit UI
+├── Dockerfile                # Container definition
+├── docker-compose.yml        # Orchestration config
 ├── langgraph.json            # LangGraph CLI config
 ├── pyproject.toml            # Dependencies
 └── .env.example              # Environment template

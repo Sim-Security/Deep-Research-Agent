@@ -191,7 +191,7 @@ deep-research-agent/
 
 | Setting | Default | Description |
 |---------|---------|-------------|
-| `RESEARCH_MODEL` | `google/gemini-2.0-flash-001` | LLM for research |
+| `RESEARCH_MODEL` | `x-ai/grok-4.1-fast` | LLM for research |
 | `SEARCH_API` | `duckduckgo` | Search backend |
 | `MAX_RESEARCHER_ITERATIONS` | `6` | Research depth |
 | `MAX_CONCURRENT_RESEARCH_UNITS` | `5` | Parallel tasks |

@@ -24,10 +24,10 @@ services:
       - LANGCHAIN_PROJECT=${LANGCHAIN_PROJECT:-deep-research-agent}
 
       # Model Configuration
-      - SUMMARIZATION_MODEL=${SUMMARIZATION_MODEL:-google/gemini-2.0-flash-001}
-      - RESEARCH_MODEL=${RESEARCH_MODEL:-google/gemini-2.0-flash-001}
-      - COMPRESSION_MODEL=${COMPRESSION_MODEL:-google/gemini-2.0-flash-001}
-      - FINAL_REPORT_MODEL=${FINAL_REPORT_MODEL:-google/gemini-2.0-flash-001}
+      - SUMMARIZATION_MODEL=${SUMMARIZATION_MODEL:-x-ai/grok-4.1-fast}
+      - RESEARCH_MODEL=${RESEARCH_MODEL:-x-ai/grok-4.1-fast}
+      - COMPRESSION_MODEL=${COMPRESSION_MODEL:-x-ai/grok-4.1-fast}
+      - FINAL_REPORT_MODEL=${FINAL_REPORT_MODEL:-x-ai/grok-4.1-fast}
 
       # Agent Configuration
       - MAX_RESEARCHER_ITERATIONS=${MAX_RESEARCHER_ITERATIONS:-6}

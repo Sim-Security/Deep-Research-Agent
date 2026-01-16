@@ -14,7 +14,7 @@ A powerful deep research agent built with **LangGraph** that conducts comprehens
 - **🔄 Parallel Research** - Supervisor-researcher architecture with concurrent research execution
 - **📝 Citation Tracking** - Automatic source attribution with URLs
 - **🤖 Multi-Model Support** - Gemini, GPT, Claude via OpenRouter
-- **🔍 Flexible Search** - DuckDuckGo (free) or Tavily (production)
+- **🔍 Tavily Search** - Production-quality research results (recommended over DuckDuckGo)
 - **📊 LangSmith Integration** - Full observability and tracing
 - **🎨 Streamlit UI** - Interactive web interface for research
 - **🐳 Docker Ready** - Containerized deployment with multi-stage builds
@@ -46,10 +46,12 @@ cp .env.example .env
 
 **Required:**
 - `OPENROUTER_API_KEY` - Get at [openrouter.ai/keys](https://openrouter.ai/keys)
+- `TAVILY_API_KEY` - **Strongly recommended** for quality results ([tavily.com](https://tavily.com), 1000 free searches/month)
 
 **Optional:**
-- `TAVILY_API_KEY` - For production search ([tavily.com](https://tavily.com))
 - `LANGCHAIN_API_KEY` - For tracing ([smith.langchain.com](https://smith.langchain.com))
+
+> ⚠️ **Note:** DuckDuckGo is available as a fallback but returns poor results for technical queries. **Use Tavily for production research.**
 
 ### 3. Run the UI
 
@@ -192,7 +194,7 @@ deep-research-agent/
 | Setting | Default | Description |
 |---------|---------|-------------|
 | `RESEARCH_MODEL` | `x-ai/grok-4.1-fast` | LLM for research |
-| `SEARCH_API` | `duckduckgo` | Search backend |
+| `SEARCH_API` | `tavily` | Search backend (**use tavily**, duckduckgo is poor quality) |
 | `MAX_RESEARCHER_ITERATIONS` | `6` | Research depth |
 | `MAX_CONCURRENT_RESEARCH_UNITS` | `5` | Parallel tasks |
 

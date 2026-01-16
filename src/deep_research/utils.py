@@ -1,6 +1,8 @@
 """Utility functions for the Deep Research agent."""
 
+import json
 import os
+import re
 from datetime import datetime
 from typing import Any
 
@@ -24,6 +26,105 @@ def get_today_str() -> str:
 def get_iso_date() -> str:
     """Get today's date in ISO format."""
     return datetime.now().strftime("%Y-%m-%d")
+
+
+# =============================================================================
+# SEARCH QUERY EXTRACTION
+# =============================================================================
+
+
+def extract_search_queries(content: str, fallback_topic: str = "") -> list[str]:
+    """Extract search queries from LLM response.
+
+    Looks for JSON block with search_queries array. Falls back to topic if not found.
+
+    Args:
+        content: LLM response content
+        fallback_topic: Topic to use if no queries found
+
+    Returns:
+        List of search queries
+    """
+    if not content:
+        return [fallback_topic] if fallback_topic else []
+
+    # Try to find JSON block in markdown code fence
+    json_match = re.search(r'```json\s*(\{.*?\})\s*```', content, re.DOTALL)
+    if json_match:
+        try:
+            data = json.loads(json_match.group(1))
+            queries = data.get("search_queries", [])
+            if queries and isinstance(queries, list):
+                return [q for q in queries if q and isinstance(q, str)]
+        except json.JSONDecodeError:
+            pass
+
+    # Try to find raw JSON object
+    json_match = re.search(r'\{[^{}]*"search_queries"\s*:\s*\[[^\]]+\][^{}]*\}', content)
+    if json_match:
+        try:
+            data = json.loads(json_match.group(0))
+            queries = data.get("search_queries", [])
+            if queries and isinstance(queries, list):
+                return [q for q in queries if q and isinstance(q, str)]
+        except json.JSONDecodeError:
+            pass
+
+    # Fallback to topic
+    return [fallback_topic] if fallback_topic else []
+
+
+def filter_relevant_results(
+    results: list[dict[str, Any]],
+    topic: str,
+    min_relevance_words: int = 2,
+) -> list[dict[str, Any]]:
+    """Filter search results for relevance to the topic.
+
+    Uses simple keyword matching to filter out obviously irrelevant results.
+
+    Args:
+        results: List of search results
+        topic: Research topic to match against
+        min_relevance_words: Minimum topic words that must appear in result
+
+    Returns:
+        Filtered list of relevant results
+    """
+    if not results or not topic:
+        return results
+
+    # Extract meaningful words from topic (3+ chars, not common words)
+    stop_words = {'the', 'and', 'for', 'are', 'but', 'not', 'you', 'all', 'can',
+                  'had', 'her', 'was', 'one', 'our', 'out', 'has', 'have', 'been',
+                  'would', 'could', 'should', 'what', 'when', 'where', 'which', 'who',
+                  'will', 'with', 'this', 'that', 'from', 'they', 'been', 'have'}
+
+    topic_words = set(
+        word.lower() for word in re.findall(r'\b\w{3,}\b', topic.lower())
+        if word.lower() not in stop_words
+    )
+
+    if not topic_words:
+        return results
+
+    filtered = []
+    for result in results:
+        # Combine title and snippet for matching
+        text = f"{result.get('title', '')} {result.get('snippet', '')}".lower()
+
+        # Count how many topic words appear in the result
+        matches = sum(1 for word in topic_words if word in text)
+
+        # Keep if enough topic words appear
+        if matches >= min(min_relevance_words, len(topic_words)):
+            filtered.append(result)
+
+    # If filtering removed everything, return top 2 original results
+    if not filtered and results:
+        return results[:2]
+
+    return filtered
 
 
 # =============================================================================

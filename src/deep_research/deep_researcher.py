@@ -43,6 +43,8 @@ from deep_research.state import (
     SupervisorState,
 )
 from deep_research.utils import (
+    extract_search_queries,
+    filter_relevant_results,
     format_citations,
     format_search_results,
     get_model_token_limit,
@@ -436,7 +438,7 @@ async def researcher_tools(
     state: ResearcherState,
     config: RunnableConfig,
 ) -> Command[Literal["researcher", "compress"]]:
-    """Execute search for the researcher.
+    """Execute search for the researcher using extracted queries.
 
     Args:
         state: Researcher state
@@ -448,24 +450,55 @@ async def researcher_tools(
     configurable = Configuration.from_runnable_config(config)
 
     topic = state.get("research_topic", "")
+    messages = state.get("researcher_messages", [])
 
-    # Perform search
+    # Extract search queries from the last LLM message
+    last_content = ""
+    if messages:
+        last_msg = messages[-1]
+        if hasattr(last_msg, 'content'):
+            last_content = last_msg.content or ""
+
+    queries = extract_search_queries(last_content, fallback_topic=topic)
+
+    # Limit to 3 queries max per iteration
+    queries = queries[:3]
+
+    # Perform searches for each query
     search_api = configurable.search_api.value
-    results = await search(
-        topic,
-        search_api=search_api,
-        max_results=configurable.max_search_results,
-    )
+    all_results = []
+    seen_urls = set()
 
-    # Format results and create citations
-    results_str = format_search_results(results)
-    citations = results_to_citations(results)
+    for query in queries:
+        results = await search(
+            query,
+            search_api=search_api,
+            max_results=configurable.max_search_results,
+        )
+
+        # Filter for relevance
+        relevant_results = filter_relevant_results(results, topic)
+
+        # Deduplicate by URL
+        for r in relevant_results:
+            url = r.get("url", "")
+            if url and url not in seen_urls:
+                seen_urls.add(url)
+                all_results.append(r)
+
+    # If no results after all queries, note it clearly
+    if not all_results:
+        results_str = f"No relevant results found for queries: {queries}"
+    else:
+        results_str = format_search_results(all_results)
+
+    citations = results_to_citations(all_results)
 
     return Command(
         goto="researcher",
         update={
             "researcher_messages": [
-                HumanMessage(content=f"Search Results:\n{results_str}")
+                HumanMessage(content=f"Search Queries Used: {queries}\n\nSearch Results:\n{results_str}")
             ],
             "raw_notes": [results_str],
             "citations": citations,

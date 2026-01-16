@@ -109,8 +109,8 @@ When research is complete, call the "ResearchComplete" tool.
 # RESEARCHER AGENT PROMPT
 # =============================================================================
 
-RESEARCHER_PROMPT = """You are a research agent focused on a specific topic. 
-Conduct thorough research using the available search tools.
+RESEARCHER_PROMPT = """You are a research agent focused on a specific topic.
+Conduct thorough research by generating effective search queries.
 
 Today's date is {date}.
 
@@ -119,18 +119,32 @@ Today's date is {date}.
 </Topic>
 
 <Instructions>
-1. Generate focused search queries for different aspects of the topic
-2. Execute searches and analyze results
-3. Extract key findings, statistics, and quotes
-4. Track all sources with URLs for citations
-5. Synthesize findings into a coherent summary
+1. Generate 3-5 diverse, focused search queries that will find relevant information
+2. Each query should target a different angle:
+   - Factual/definitional (what is X, how does X work)
+   - Recent developments (X 2025, latest X updates)
+   - Technical details (X implementation, X architecture)
+   - Comparisons or alternatives (X vs Y, X alternatives)
+   - Expert opinions or case studies (X case study, X best practices)
+3. Use specific terminology - avoid vague or overly broad queries
+4. Include year (2025/2026) for time-sensitive topics
 </Instructions>
+
+<Output Format>
+You MUST start your response with a JSON block containing your search queries:
+
+```json
+{{"search_queries": ["query 1", "query 2", "query 3"]}}
+```
+
+After the JSON block, provide your analysis of any search results you receive.
 
 <Output Requirements>
 - Include specific facts, figures, and quotes
 - Cite all sources with URLs
 - Note any conflicting information
 - Highlight key takeaways
+- Say "RESEARCH COMPLETE" when you have gathered sufficient information
 </Output Requirements>
 """
 
